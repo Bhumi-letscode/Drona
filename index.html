@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Google Meet Integration</title>
-    <meta name="google-signin-client_id" content="YOUR_CLIENT_ID_HERE">
+    <meta name="google-signin-client_id" content="208170881357-en2gmrl1i61vdipkggirlgapaijl7dc9.apps.googleusercontent.com">
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -98,6 +98,8 @@
     <script src="https://apis.google.com/js/platform.js" async defer></script>
     <script src="https://apis.google.com/js/api.js"></script>
     <script>
+        var SCOPES = "https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/calendar.events";
+
         // Global variable for storing the Google User
         let googleUser;
 
@@ -121,7 +123,7 @@
 
         function initApiClient() {
             gapi.auth2.init({
-                client_id: 'YOUR_CLIENT_ID_HERE',  // Replace with your actual client ID
+                client_id: '208170881357-en2gmrl1i61vdipkggirlgapaijl7dc9.apps.googleusercontent.com',  // Replace with your actual client ID
             }).then(function() {
                 gapi.client.load('calendar', 'v3', function() {
                     console.log('Google Calendar API loaded');
