@@ -3,6 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <title>Google Meet Integration</title>
+    <meta name="google-signin-client_id" content="YOUR_CLIENT_ID_HERE">
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -26,6 +27,7 @@
             border: none;
             border-radius: 4px;
             cursor: pointer;
+            transition: background-color 0.3s ease;
         }
         .btn:hover {
             background-color: #357ae8;
@@ -43,14 +45,28 @@
         #meetLink {
             background-color: #f0f0f0;
         }
+        #userInfo {
+            text-align: center;
+            margin-bottom: 15px;
+        }
+        #userImage {
+            border-radius: 50%;
+            max-width: 80px;
+            margin-bottom: 10px;
+        }
     </style>
 </head>
 <body>
     <div class="container">
         <h2>Google Meet Integration</h2>
         
+        <div id="userInfo" style="display:none;">
+            <img id="userImage" src="" alt="User Profile">
+            <div id="userName"></div>
+        </div>
+
         <div id="signInSection">
-            <button class="btn" onclick="signIn()">Sign in with Google</button>
+            <div class="g-signin2" data-onsuccess="onSignIn"></div>
         </div>
 
         <div id="meetSection" style="display:none;">
@@ -80,59 +96,96 @@
     </div>
 
     <script src="https://apis.google.com/js/platform.js" async defer></script>
+    <script src="https://apis.google.com/js/api.js"></script>
     <script>
-        // Google Meet Integration Script
-        let isSignedIn = false;
+        // Global variable for storing the Google User
+        let googleUser;
 
-        function signIn() {
-            // Implement Google Sign-In
-            gapi.load('auth2', function() {
-                gapi.auth2.init({
-                    client_id: '859244668624-6kg3oiftf7n2apuspsr7govvt6bcognt.apps.googleusercontent.com',
-                    scope: 'https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/meetings'
-                }).then(function(auth2) {
-                    auth2.signIn().then(function(googleUser) {
-                        updateSignInStatus(true);
-                    });
+        function onSignIn(googleUserObj) {
+            googleUser = googleUserObj;
+            const profile = googleUser.getBasicProfile();
+            
+            document.getElementById('userImage').src = profile.getImageUrl();
+            document.getElementById('userName').textContent = profile.getName();
+            document.getElementById('userInfo').style.display = 'block';
+
+            document.getElementById('signInSection').style.display = 'none';
+            document.getElementById('meetSection').style.display = 'block';
+
+            loadCalendarApi();  // Load the Google Calendar API after sign-in
+        }
+
+        function loadCalendarApi() {
+            gapi.load('client:auth2', initApiClient);
+        }
+
+        function initApiClient() {
+            gapi.auth2.init({
+                client_id: 'YOUR_CLIENT_ID_HERE',  // Replace with your actual client ID
+            }).then(function() {
+                gapi.client.load('calendar', 'v3', function() {
+                    console.log('Google Calendar API loaded');
                 });
             });
         }
 
-        function updateSignInStatus(status) {
-            isSignedIn = status;
-            document.getElementById('signInSection').style.display = status ? 'none' : 'block';
-            document.getElementById('meetSection').style.display = status ? 'block' : 'none';
-        }
-
         function createMeeting() {
-            // Placeholder for meeting creation logic
-            const meetLink = `https://meet.google.com/${generateRandomString()}`;
-            document.getElementById('meetLink').value = meetLink;
+            const event = {
+                'summary': 'Google Meet Meeting',
+                'start': {
+                    'dateTime': new Date().toISOString(),
+                    'timeZone': 'America/Los_Angeles',
+                },
+                'end': {
+                    'dateTime': new Date(new Date().getTime() + 60 * 60 * 1000).toISOString(),  // Meeting duration 1 hour
+                    'timeZone': 'America/Los_Angeles',
+                },
+                'conferenceData': {
+                    'createRequest': {
+                        'requestId': 'sample123',  // Unique request ID for the meeting
+                        'conferenceSolutionKey': {
+                            'type': 'hangoutsMeet',
+                        },
+                    },
+                },
+            };
+
+            const request = gapi.client.calendar.events.insert({
+                'calendarId': 'primary',
+                'resource': event,
+                'conferenceDataVersion': 1,
+            });
+
+            request.execute(function(event) {
+                const meetLink = event.hangoutLink;
+                document.getElementById('meetLink').value = meetLink;
+                console.log('Created event: ' + event.htmlLink);
+            });
         }
 
         function copyLink() {
             const linkInput = document.getElementById('meetLink');
             linkInput.select();
             document.execCommand('copy');
-            alert('Link copied to clipboard!');
+            alert('Meeting link copied to clipboard!');
         }
 
         function inviteParticipants() {
             const participants = document.getElementById('participants').value;
-            alert(`Invitation sent to: ${participants}`);
+            if (participants) {
+                alert(`Invitation would be sent to: ${participants}`);
+            } else {
+                alert('Please enter participant email(s)');
+            }
         }
 
         function signOut() {
-            gapi.load('auth2', function() {
-                const auth2 = gapi.auth2.getAuthInstance();
-                auth2.signOut().then(function() {
-                    updateSignInStatus(false);
-                });
+            const auth2 = gapi.auth2.getAuthInstance();
+            auth2.signOut().then(function () {
+                document.getElementById('userInfo').style.display = 'none';
+                document.getElementById('meetSection').style.display = 'none';
+                document.getElementById('signInSection').style.display = 'block';
             });
-        }
-
-        function generateRandomString() {
-            return Math.random().toString(36).substring(2, 10);
         }
     </script>
 </body>
