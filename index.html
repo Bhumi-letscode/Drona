@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Google Meet Integration</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 400px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f4f4f4;
+        }
+        .container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            padding: 20px;
+        }
+        .btn {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            background-color: #4285F4;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        .btn:hover {
+            background-color: #357ae8;
+        }
+        .btn-signout {
+            background-color: #db4437;
+        }
+        .input-field {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+        #meetLink {
+            background-color: #f0f0f0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Google Meet Integration</h2>
+        
+        <div id="signInSection">
+            <button class="btn" onclick="signIn()">Sign in with Google</button>
+        </div>
+
+        <div id="meetSection" style="display:none;">
+            <button class="btn" onclick="createMeeting()">Create Meeting</button>
+            
+            <input 
+                type="text" 
+                id="meetLink" 
+                class="input-field" 
+                placeholder="Meeting Link" 
+                readonly
+            >
+            
+            <button class="btn" onclick="copyLink()">Copy Link</button>
+            
+            <input 
+                type="text" 
+                id="participants" 
+                class="input-field" 
+                placeholder="Enter participant emails (comma-separated)"
+            >
+            
+            <button class="btn" onclick="inviteParticipants()">Invite Participants</button>
+            
+            <button class="btn btn-signout" onclick="signOut()">Sign Out</button>
+        </div>
+    </div>
+
+    <script src="https://apis.google.com/js/platform.js" async defer></script>
+    <script>
+        // Google Meet Integration Script
+        let isSignedIn = false;
+
+        function signIn() {
+            // Implement Google Sign-In
+            gapi.load('auth2', function() {
+                gapi.auth2.init({
+                    client_id: '859244668624-6kg3oiftf7n2apuspsr7govvt6bcognt.apps.googleusercontent.com',
+                    scope: 'https://www.googleapis.com/auth/calendar https://www.googleapis.com/auth/meetings'
+                }).then(function(auth2) {
+                    auth2.signIn().then(function(googleUser) {
+                        updateSignInStatus(true);
+                    });
+                });
+            });
+        }
+
+        function updateSignInStatus(status) {
+            isSignedIn = status;
+            document.getElementById('signInSection').style.display = status ? 'none' : 'block';
+            document.getElementById('meetSection').style.display = status ? 'block' : 'none';
+        }
+
+        function createMeeting() {
+            // Placeholder for meeting creation logic
+            const meetLink = `https://meet.google.com/${generateRandomString()}`;
+            document.getElementById('meetLink').value = meetLink;
+        }
+
+        function copyLink() {
+            const linkInput = document.getElementById('meetLink');
+            linkInput.select();
+            document.execCommand('copy');
+            alert('Link copied to clipboard!');
+        }
+
+        function inviteParticipants() {
+            const participants = document.getElementById('participants').value;
+            alert(`Invitation sent to: ${participants}`);
+        }
+
+        function signOut() {
+            gapi.load('auth2', function() {
+                const auth2 = gapi.auth2.getAuthInstance();
+                auth2.signOut().then(function() {
+                    updateSignInStatus(false);
+                });
+            });
+        }
+
+        function generateRandomString() {
+            return Math.random().toString(36).substring(2, 10);
+        }
+    </script>
+</body>
+</html>
